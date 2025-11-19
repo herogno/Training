@@ -1,1 +1,432 @@
-https://github.com/herogno/Emergency-planner
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beredskapsflytskjema for Mobilitet i Kommune</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --color-indigo: #4f46e5;
+            --color-blue: #3b82f6;
+            --color-slate: #64748b;
+            --color-light: #f8fafc;
+        }
+
+        /* Konfigurerer standard fonter og bakgrunn */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* Lysegrå bakgrunn */
+        }
+
+        /* Stil for hovedflyt-elementene */
+        .flow-container {
+            position: relative;
+            padding: 20px 0;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Stilen for den vertikale linjen som representerer flyten */
+        .flow-line {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 4px;
+            background-color: #cbd5e1; /* Lys grå linje */
+            height: 100%;
+            transform: translateX(-50%);
+        }
+
+        /* Stil for hvert trinn i flyten */
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        /* Sirkelen som markerer hvert trinn på linjen */
+        .flow-step-marker {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            top: 0;
+            transform: translate(-50%, 15px);
+            z-index: 10;
+            border: 4px solid #f1f5f9; /* Bakgrunnsfarge for å bryte linjen */
+        }
+
+        /* Innholdskortet for trinnet */
+        .flow-step-content {
+            width: 45%;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+       
+        /* Hover-effekt */
+        .flow-step-content:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Piler som peker mot midten */
+        .flow-step:nth-child(even) .flow-step-content {
+            margin-left: 55%; /* Plasserer innholdet til høyre */
+            text-align: left;
+        }
+
+        .flow-step:nth-child(odd) .flow-step-content {
+            margin-right: 55%; /* Plasserer innholdet til venstre */
+            text-align: right;
+        }
+       
+        /* Pil fra venstre til høyre */
+        .flow-step:nth-child(odd) .flow-step-content::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 25px;
+            width: 0;
+            height: 0;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            border-left: 10px solid; /* Fylles av JavaScript for å matche farge */
+            transform: translateX(100%);
+        }
+
+        /* Pil fra høyre til venstre */
+        .flow-step:nth-child(even) .flow-step-content::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 25px;
+            width: 0;
+            height: 0;
+            border-top: 10px solid transparent;
+            border-bottom: 10px solid transparent;
+            border-right: 10px solid; /* Fylles av JavaScript for å matche farge */
+            transform: translateX(-100%);
+        }
+
+        /* Media Query for Mobile: Endre til én kolonne */
+        @media (max-width: 768px) {
+            .flow-step-content {
+                width: 100%;
+                margin: 0 !important;
+                text-align: left !important;
+            }
+            .flow-step-marker {
+                left: 10px; /* Flytt markør til venstre */
+                transform: translateX(0);
+            }
+            .flow-line {
+                left: 19px; /* Flytt linjen til venstre */
+            }
+
+            .flow-step-content {
+                margin-left: 40px !important;
+            }
+
+            /* Fjern piler på mobil, da flyten er lineær vertikalt */
+            .flow-step-content::after {
+                content: none !important;
+            }
+        }
+
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <div class="max-w-4xl mx-auto py-8">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-4 text-center">
+            Beredskapsflytskjema: Mobilitet og Fremkommelighet
+        </h1>
+        <p class="text-xl text-slate-600 mb-12 text-center">
+            Plan for håndtering av kritiske hendelser i kommunens veinett.
+        </p>
+    </div>
+
+    <!-- Gemini API Interaksjonsboks for øvelse/kommunikasjon -->
+    <div class="max-w-4xl mx-auto bg-white p-6 sm:p-8 rounded-xl shadow-2xl border-t-4 border-[var(--color-indigo)] mb-12">
+        <h2 class="text-3xl font-bold text-[var(--color-indigo)] mb-4 flex items-center">
+            <svg class="w-6 h-6 mr-3" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v2.191l3.585 3.585A1 1 0 0115.828 9h-2.191l3.586 3.585A1 1 0 0118 13v2.191l-3.585-3.585A1 1 0 0113 13.828v2.191l-3.585-3.586A1 1 0 019 15.828v2.191l-3.585-3.585A1 1 0 014.172 13h2.191l-3.586-3.585A1 1 0 012 9V6.809l3.585 3.585A1 1 0 016.172 9H8.363L4.777 5.414A1 1 0 014 4V1.809l3.585 3.585A1 1 0 018 6.172h2.191l-3.585-3.585A1 1 0 0111.3 1.046zM11 5a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"></path></svg>
+            Beredskaps-simulator (Gemini AI)
+        </h2>
+        <p class="text-slate-600 mb-4">Beskriv en krisesituasjon for mobilitet (f.eks. "Hovedvei stengt grunnet isras og stor snøstorm forventes") og generer et tiltakskort eller et kommunikasjonsutkast.</p>
+
+        <textarea id="scenarioInput" rows="3" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-[var(--color-blue)] focus:border-[var(--color-blue)] mb-4 text-sm" placeholder="Eksempel: En stor bekk flommer over og truer med å vaske ut deler av fylkesvei X, samtidig som strømmen er ute i den delen av kommunen."></textarea>
+       
+        <div class="flex flex-col sm:flex-row gap-4 mb-6">
+            <button onclick="generateActionCard()" id="actionButton" class="flex-1 px-6 py-3 bg-[var(--color-indigo)] text-white font-bold rounded-lg shadow-md hover:bg-indigo-600 transition duration-150 ease-in-out disabled:opacity-50">
+                ✨ Generer Tiltakskort (Operativt)
+            </button>
+            <button onclick="generateCommunicationDraft()" id="commButton" class="flex-1 px-6 py-3 bg-[var(--color-blue)] text-white font-bold rounded-lg shadow-md hover:bg-blue-600 transition duration-150 ease-in-out disabled:opacity-50">
+                ✨ Utkast til Kommunikasjon (Publikum)
+            </button>
+        </div>
+
+        <div id="loadingIndicator" class="hidden text-center text-[var(--color-slate)] font-semibold">
+            <svg class="animate-spin h-5 w-5 text-[var(--color-indigo)] inline-block mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            AI genererer respons...
+        </div>
+
+        <div id="outputArea" class="mt-4 p-4 min-h-[100px] border border-slate-300 bg-white rounded-lg whitespace-pre-wrap">
+            <!-- AI-generert respons vises her -->
+        </div>
+    </div>
+
+
+    <div class="flow-container" id="flowchart">
+        <div class="flow-line"></div>
+
+        <!-- Trinn 1: FORMÅL OG OMFANG (Start) -->
+        <div class="flow-step">
+            <div class="flow-step-marker bg-[var(--color-indigo)]"></div>
+            <div class="flow-step-content bg-[var(--color-indigo)] text-white shadow-xl">
+                <h2 class="text-2xl font-bold mb-2">1. FORMÅL & OMFANG</h2>
+                <p class="text-sm">Planen sikrer mobilitet ved hendelser (uvær, snø, glatt, etc.). Dekker kommunale veier. Refererer til Sivilbeskyttelsesloven.</p>
+            </div>
+        </div>
+
+        <!-- Trinn 2: HENDELSE (Innledende) -->
+        <div class="flow-step">
+            <div class="flow-step-marker bg-[var(--color-blue)]"></div>
+            <div class="flow-step-content bg-[var(--color-light)] text-slate-700 border border-blue-200">
+                <h2 class="text-2xl font-bold text-[var(--color-blue)] mb-2">A. Hendelse oppstår</h2>
+                <p class="text-sm">Melding mottas via nødetater (110/112/113), politi, vakttelefon eller fra innbyggere.</p>
+            </div>
+        </div>
+
+        <!-- Trinn 3: INTERN VARSLING (Innledende) -->
+        <div class="flow-step">
+            <div class="flow-step-marker bg-[var(--color-slate)]"></div>
+            <div class="flow-step-content bg-[var(--color-light)] text-slate-700 border border-slate-300">
+                <h2 class="text-2xl font-bold text-[var(--color-slate)] mb-2">B. Varsling & Roller</h2>
+                <p class="text-sm">Beredskapsleder og Kommunedirektør varsles først (Telefon/SMS). Nøkkelroller (Operativ leder, Ressursansvarlig) er på standby.</p>
+            </div>
+        </div>
+
+        <!-- Trinn 4: VURDERING (Aktivering) -->
+        <div class="flow-step">
+            <div class="flow-step-marker bg-[var(--color-blue)]"></div>
+            <div class="flow-step-content bg-[var(--color-light)] text-slate-700 border border-blue-200">
+                <h2 class="text-2xl font-bold text-[var(--color-blue)] mb-2">C. Vurdering av Stabsmøte</h2>
+                <p class="text-sm">Beredskapsleder vurderer alvorlighetsgrad. Er det behov for å kalle inn full stab? Hvis ikke: Gå direkte til Felles Tiltak (D).</p>
+            </div>
+        </div>
+
+        <!-- Trinn 5: Felles Tiltakskort (Aktivitet) -->
+        <div class="flow-step">
+            <div class="flow-step-marker bg-[var(--color-indigo)]"></div>
+            <div class="flow-step-content bg-[var(--color-indigo)] text-white shadow-xl">
+                <h2 class="text-2xl font-bold mb-2">D. Felles Tiltakskort (KRITISK)</h2>
+                <p class="text-sm font-semibold">Start loggføring. Varsle nøkkelpersoner. Vurder stab. Utfør strakstiltak. Kontinuerlig dialog med nødetater.</p>
+            </div>
+        </div>
+       
+        <!-- Trinn 6: Spesifikke Tiltak (Gjennomføring) -->
+        <div class="flow-step">
+            <div class="flow-step-marker bg-[var(--color-slate)]"></div>
+            <div class="flow-step-content bg-[var(--color-light)] text-slate-700 border border-slate-300">
+                <h2 class="text-2xl font-bold text-[var(--color-slate)] mb-2">E. Spesifikke Tiltak</h2>
+                <p class="text-sm">Utfører scenario-spesifikke handlinger:<br>
+                - **Snø:** Prioriterte brøyteruter (nødetater/skole).<br>
+                - **Glatt/Is:** Umiddelbar strøing/salting av kritiske punkter.<br>
+                - **Uvær/Flom:** Vurder veistenging, sikre rasutsatte områder.</p>
+            </div>
+        </div>
+
+        <!-- Trinn 7: Ressursstyring (Gjennomføring) -->
+        <div class="flow-step">
+            <div class="flow-step-marker bg-[var(--color-slate)]"></div>
+            <div class="flow-step-content bg-[var(--color-light)] text-slate-700 border border-slate-300">
+                <h2 class="text-2xl font-bold text-[var(--color-slate)] mb-2">F. Ressurser</h2>
+                <p class="text-sm">Ressursansvarlig sikrer mannskap og maskinpark (brøytebiler, hjullastere). Full oversikt i elektronisk system (f.eks. SharePoint).</p>
+            </div>
+        </div>
+       
+        <!-- Trinn 8: Kommunikasjon (Gjennomføring) -->
+        <div class="flow-step">
+            <div class="flow-step-marker bg-[var(--color-indigo)]"></div>
+            <div class="flow-step-content bg-[var(--color-indigo)] text-white shadow-xl">
+                <h2 class="text-2xl font-bold mb-2">G. Varsling av Befolkningen</h2>
+                <p class="text-sm font-semibold">Kontinuerlig og oppdatert informasjon via kommunens nettside, SMS-varsling og sosiale medier om veistenging/råd.</p>
+            </div>
+        </div>
+
+        <!-- Trinn 9: AVSLUTNING (Avslutning) -->
+        <div class="flow-step">
+            <div class="flow-step-marker bg-[var(--color-blue)]"></div>
+            <div class="flow-step-content bg-[var(--color-light)] text-slate-700 border border-blue-200">
+                <h2 class="text-2xl font-bold text-[var(--color-blue)] mb-2">H. Avslutning og Demobilisering</h2>
+                <p class="text-sm">Situasjonen erklæres avklart og under kontroll. Beredskapsstaben demobiliseres. Normal drift gjenopprettes.</p>
+            </div>
+        </div>
+
+        <!-- Trinn 10: REVISJON (Avslutning) -->
+        <div class="flow-step">
+            <div class="flow-step-marker bg-[var(--color-slate)]"></div>
+            <div class="flow-step-content bg-[var(--color-light)] text-slate-700 border border-slate-300">
+                <h2 class="text-2xl font-bold text-[var(--color-slate)] mb-2">I. Evaluering og Revisjon</h2>
+                <p class="text-sm">Etter hendelsen: Evaluering for å identifisere læringspunkter. Ansvar for årlig revisjon av hele planen ligger hos Beredskapsleder.</p>
+            </div>
+        </div>
+       
+    </div>
+
+    <script>
+        // --- Gemini API Konstanter og Funksjoner ---
+        const apiKey = "";
+        const apiUrlBase = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=";
+        const maxRetries = 3;
+        const initialDelay = 1000;
+
+        const outputArea = document.getElementById('outputArea');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const actionButton = document.getElementById('actionButton');
+        const commButton = document.getElementById('commButton');
+        const scenarioInput = document.getElementById('scenarioInput');
+
+        // Hjelpefunksjon for å håndtere eksponentiell backoff
+        async function fetchWithRetry(url, payload, retries = maxRetries, delay = initialDelay) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.status === 429 && retries > 0) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchWithRetry(url, payload, retries - 1, delay * 2);
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                return response.json();
+            } catch (error) {
+                if (retries > 0) {
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return fetchWithRetry(url, payload, retries - 1, delay * 2);
+                }
+                throw error;
+            }
+        }
+
+        function setLoading(isLoading) {
+            loadingIndicator.classList.toggle('hidden', !isLoading);
+            actionButton.disabled = isLoading;
+            commButton.disabled = isLoading;
+            if (isLoading) {
+                outputArea.innerHTML = '';
+            }
+        }
+
+        async function callGemini(systemPrompt, userQuery) {
+            if (!userQuery.trim()) {
+                outputArea.innerHTML = "Vennligst beskriv et scenario først.";
+                return null;
+            }
+
+            setLoading(true);
+           
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+            };
+
+            const apiUrl = apiUrlBase + apiKey;
+
+            try {
+                const result = await fetchWithRetry(apiUrl, payload);
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+               
+                if (text) {
+                    return text;
+                } else {
+                    return "Kunne ikke generere respons. Prøv igjen med en annen beskrivelse.";
+                }
+
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                return "En feil oppstod under genereringen. Vennligst sjekk konsollen.";
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function generateActionCard() {
+            const userQuery = scenarioInput.value;
+            const systemPrompt = `
+                You are an experienced municipal emergency manager in Norway. A critical mobility incident has occurred.
+                Based on the user's description of the event, generate a prioritized, concise action list (max 5 bullet points) tailored for the Operational Leader, referencing general steps like log-keeping and resource check.
+                The response must be in Norwegian. Format the output with a bold title followed by bullet points.
+            `;
+           
+            const result = await callGemini(systemPrompt, userQuery);
+            if (result) {
+                outputArea.innerHTML = `<h3 class="text-xl font-bold mb-2 text-indigo-700">Generert Tiltakskort:</h3>${result}`;
+            }
+        }
+
+        async function generateCommunicationDraft() {
+            const userQuery = scenarioInput.value;
+            const systemPrompt = `
+                You are a public information officer (PIO) for a Norwegian municipality.
+                Draft a single, urgent communication message (max 2 sentences, suitable for SMS or web headline) based on the user's scenario.
+                Focus on the core problem and the key instruction for the public.
+                The response must be in Norwegian. Format the output with a bold title followed by the draft text.
+            `;
+           
+            const result = await callGemini(systemPrompt, userQuery);
+            if (result) {
+                outputArea.innerHTML = `<h3 class="text-xl font-bold mb-2 text-blue-700">Utkast til Offentlig Kommunikasjon:</h3>${result}`;
+            }
+        }
+
+
+        // --- Flytskjema Styling (eksisterende funksjon) ---
+        window.onload = () => {
+             // Må bruke JavaScript for å sette border-farge som tilsvarer bakgrunnen for pilene (etter pseudo-elementer)
+            const steps = document.querySelectorAll('.flow-step');
+           
+            steps.forEach((step, index) => {
+                const content = step.querySelector('.flow-step-content');
+                const backgroundColor = getComputedStyle(content).backgroundColor;
+                const afterStyle = content.querySelector('style') || document.createElement('style');
+               
+                if (!content.querySelector('style')) {
+                    content.appendChild(afterStyle);
+                }
+
+                // Sette farge på pilen
+                if (index % 2 === 0) { // Odd = Venstre -> Høyre
+                     afterStyle.innerHTML = `
+                        .flow-step:nth-child(${index + 1}) .flow-step-content::after {
+                            border-left-color: ${backgroundColor};
+                        }
+                    `;
+                } else { // Even = Høyre -> Venstre
+                    afterStyle.innerHTML = `
+                        .flow-step:nth-child(${index + 1}) .flow-step-content::after {
+                            border-right-color: ${backgroundColor};
+                        }
+                    `;
+                }
+            });
+        };
+    </script>
+</body>
+</html>
